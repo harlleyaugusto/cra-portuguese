@@ -56,6 +56,7 @@ def link_list_freq(noun_phrases, freq_edges):
                     freq_edges[edge] = 1
     return edgelist
 
+#Apply nlp to get nlp features for each string
 def create_docs(str):
     print(str)
     if(str is not None and str != ''):
@@ -63,24 +64,39 @@ def create_docs(str):
     else: return None
 
 if __name__ == '__main__':
+    #Raw data loading
     data = pd.read_csv("data/posts_facebook_latin.csv", engine='python', encoding='iso-8859-1', sep=';')
+    #Post influents: levels [1...5]
+    posts_influents = pd.read_csv("data/posts_mais_influentes.csv", encoding='iso-8859-1', sep=';')
 
+    #Jois raw data with influents posts to get the level column
+    data = pd.merge(data, posts_influents, left_on='Texto', right_on='POST').drop(columns=['POST']).rename(
+        columns={"Qtd Níveis": "qtd_niveis"})
+
+    #Filtering posts by level
+    level = [4, 5]
+    data = data[data.qtd_niveis.isin(level)]
+
+    #Data cleaning
     data.Texto = data.Texto.apply(remove_urls)
-
     data.Texto = data.Texto.apply(remove_tags)
-
     data.Texto = data.Texto.apply(remove_punctuation)
 
+    #Stanza pipeline for word classification (pt-br)
     stopwords = get_stop_words('pt')
-
     nlp = stanza.Pipeline(lang='pt', processors='tokenize,mwt,pos,lemma')
     docs = data.Texto.apply(create_docs)
 
+    #Filtering noun phrases
     data['np'] = docs.apply(lambda doc : filter_noun_phrases(doc, stopwords))
 
+    #Building the edges and its frequency
     freq_edges = {}
     data['link'] = data['np'].apply(lambda x: link_list_freq(x, freq_edges))
 
-    data.to_csv("data/posts_facebook_processed.csv", index=False)
+    #Save the network with posts in level[1...5]
+    data.to_csv("data/posts_facebook_processed_level_" + str(level).replace(" ", "") + ".csv", index=False)
+
+    #Save the frequency of each edges
     freq_edges = pd.DataFrame.from_dict(freq_edges, orient= "index")
-    freq_edges.to_csv("data/freq_edges.csv")
+    freq_edges.to_csv("data/freq_edges_level_" + str(level).replace(" ", "") + ".csv")

@@ -18,6 +18,47 @@ from stop_words import get_stop_words
 import networkx as nx
 import math
 
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.distributions.empirical_distribution import ECDF
+
+
+def graph_plot(G):
+    #%pylab inline
+    #%config InlineBackend.figure_format = 'png'
+    H = G.copy()
+    plt.rc('figure', figsize=(12, 7))
+    nodes = [x for x, y in H.nodes(data=True) if y['betweenness'] == 0.0]
+    H.remove_nodes_from(nodes)
+    node_size = [y['betweenness'] * 10000 for x, y in H.nodes(data=True)]
+    pos = nx.spring_layout(H)
+    nx.draw_networkx(H, pos, node_size=node_size, edge_color='y', alpha=.004, linewidths=0.00001)
+    plt.savefig("graph.pdf")
+
+def save_graph(G, index):
+    #index = nx.betweenness_centrality(G)
+
+    G.remove_nodes_from([n for n in index if index[n] == .0])
+    node_size = [index[n] * 10000 for n in G]
+    pos = nx.spring_layout(G)
+
+    #initialze Figure
+    plt.figure(num=None, figsize=(20, 20), dpi=80)
+    plt.axis('off')
+    fig = plt.figure(1)
+    nx.draw_networkx_nodes(G,pos, node_size=2.6)
+    nx.draw_networkx_edges(G,pos, width = 0.3)
+
+   # cut = 1.00
+   # xmax = cut * max(xx for xx, yy in pos.values())
+   # ymax = cut * max(yy for xx, yy in pos.values())
+   # plt.xlim(0, xmax)
+   # plt.ylim(0, ymax)
+
+    plt.savefig("rede",bbox_inches="tight")
+    pylab.close()
+
 
 def central_words(index):
     #index = nx.betweenness_centrality(G)
@@ -62,18 +103,31 @@ def standardized_pr(index_a, index_b):
 
 
 if __name__ == '__main__':
-    G = nx.read_gexf("data/facebook_network.gexf")
+    level = [4, 5]
+    G = nx.read_gexf("data/facebook_network_level_" + str(level).replace(" ", "") + ".gexf")
+    betweenneess = [y['betweenness'] for x, y in G.nodes(data=True)]
+    freq = [z['frequency'] for x, y, z in G.edges.data()]
 
-    finance_index = nx.get_node_attributes(G, 'betweenness').items()
-    food_index = nx.get_node_attributes(G, 'betweenness').items()
+    #nodes with betweenness == 0.0
+    H = G.copy()
+    #nodes = [x for x, y in H.nodes(data=True) if y['betweenness'] == 0.0]
+    #H.remove_nodes_from(nodes)
+    remov_edge = [(x, y) for x, y, z in G.edges.data() if z['frequency'] < 50]
+    H.remove_edges_from(remov_edge)
+    H.remove_nodes_from(list(nx.isolates(H)))
+    nx.write_gexf(H, 'data/freq_greater_than_5_facebook_network_level_[4,5].gexf')
+    nx.write_gexf(G, 'data/facebook_network_level_[4,5].gexf')
 
-    print (simple_resonance(finance_index, food_index))
-    print (standardized_sr(finance_index, food_index))
-
-    finance_iscore = nx.get_edge_attributes(G, 'pair_i')
-    food_iscore = nx.get_edge_attributes(G, 'pair_i')
-
-    print(pair_resonance(finance_iscore, food_iscore))
-
-    print(standardized_pr(finance_iscore, food_iscore))
+    # finance_index = nx.get_node_attributes(G, 'betweenness').items()
+    # food_index = nx.get_node_attributes(G, 'betweenness').items()
+    #
+    # print (simple_resonance(finance_index, food_index))
+    # print (standardized_sr(finance_index, food_index))
+    #
+    # finance_iscore = nx.get_edge_attributes(G, 'pair_i')
+    # food_iscore = nx.get_edge_attributes(G, 'pair_i')
+    #
+    # print(pair_resonance(finance_iscore, food_iscore))
+    #
+    # print(standardized_pr(finance_iscore, food_iscore))
 
