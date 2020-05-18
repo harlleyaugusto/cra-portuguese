@@ -2,7 +2,7 @@ from nltk.corpus import reuters
 from nltk.corpus import stopwords
 import re
 import itertools as it
-
+import nltk
 if __name__ == '__main__':
     stopwords = stopwords.words() + ['.', ',', '"', "'", '-', '.-']
     first_doc = reuters.sents(reuters.fileids()[0])
@@ -22,3 +22,4 @@ if __name__ == '__main__':
                     for sent in tagged_sents]
 
     edgelist = [edge for phrase in noun_phrases for edge in it.combinations(phrase, 2)]
+

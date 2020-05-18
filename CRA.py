@@ -63,6 +63,7 @@ if __name__ == '__main__':
     #Reading the edge frequency for the data processed file loaded
     freq_edges = pd.read_csv("data/freq_edges_level_[4,5].csv", index_col = 0).to_dict()["0"]
 
+    #Return a graph with node's betweenness and edges's frequency
     G = cra_centered_graph(edgelist, freq_edges)
 
     #Save the CRA network with betweness and frequency:
