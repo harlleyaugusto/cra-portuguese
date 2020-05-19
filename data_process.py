@@ -56,7 +56,7 @@ def link_list_freq(noun_phrases, freq_edges):
     return edgelist
 
 #Apply nlp to get nlp features for each string
-def create_docs(str):
+def create_docs(str, nlp):
     print(str)
     if(str is not None and str != ''):
         return nlp(str)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     #Filtering noun phrases
     data['np'] = docs.apply(lambda doc : filter_noun_phrases(doc, stopwords))
 
-    #Building the edges and its frequency
+    #Creating edges and its frequency
     freq_edges = {}
     data['link'] = data['np'].apply(lambda x: link_list_freq(x, freq_edges))
 
