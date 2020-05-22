@@ -86,7 +86,7 @@ def standardized_sr(network_a, network_b):
     sum_b_squared = sum([centr**2 for word, centr in index_b])
 
     norm = math.sqrt((sum_a_squared * sum_b_squared))
-    standardized = simple_resonance(network_a, network_a) / norm
+    standardized = simple_resonance(network_a, network_b) / norm
 
     return standardized
 
