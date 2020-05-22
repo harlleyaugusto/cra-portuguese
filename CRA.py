@@ -20,16 +20,18 @@ def cra_centered_graph(edgelist, freq_edges):
     set_edgelistset = set(edgelist)
     set_size = set_edgelistset.__len__()
     i = 0
+
+    print("Set Frequency...")
     for edge in set_edgelistset:
         i = i + 1
-        print("Frequency calculation: " + str(i) + "/" + str(set_size))
+        #print("Frequency calculation: " + str(i) + "/" + str(set_size))
         freq = 0
-        if str(edge) in freq_edges:
-            freq = freq_edges[str(edge)]
-        if str((edge[1], edge[0])) in freq_edges:
-            freq = freq +  freq_edges[str((edge[1], edge[0]))]
-
+        if edge in freq_edges:
+            freq = freq + freq_edges[edge]
+        if (edge[1], edge[0]) in freq_edges:
+            freq = freq + freq_edges[(edge[1], edge[0])]
         graph.add_edge(*edge, frequency=freq)
+    print("Done!")
 
     print("betweenness_centrality calculation...")
     betweenness = nx.betweenness_centrality(graph)
@@ -40,7 +42,7 @@ def cra_centered_graph(edgelist, freq_edges):
     nodes_size = graph.number_of_nodes()
     for n in graph:
         i = i + 1
-        print("Setting betweenness: " + str(i) + "/" + str(nodes_size))
+        #print("Setting betweenness: " + str(i) + "/" + str(nodes_size))
         graph.nodes[n]['betweenness'] = betweenness[n]
 
     print("Done!")
@@ -61,7 +63,10 @@ if __name__ == '__main__':
     print("Done!")
 
     #Reading the edge frequency for the data processed file loaded
-    freq_edges = pd.read_csv("data/freq_edges_level_[4,5].csv", index_col = 0).to_dict()["0"]
+    freq_edges = pd.read_csv("data/freq_edges_level_[4,5].csv", index_col = 0)
+    freq_edges['edges'] = freq_edges.index
+    freq_edges['edges'] = freq_edges['edges'].apply(eval)
+    freq_edges= freq_edges.set_index(freq_edges.edges).drop(columns = ['edges']).to_dict()
 
     #Return a graph with node's betweenness and edges's frequency
     G = cra_centered_graph(edgelist, freq_edges)

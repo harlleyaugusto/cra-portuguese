@@ -68,19 +68,27 @@ def central_words(index):
     for word, centr in sorted_index[:20]:
         print (word + " " + str(centr))
 
-def simple_resonance(index_a, index_b):
+def simple_resonance(network_a, network_b):
+    index_a = nx.get_node_attributes(network_a, 'betweenness').items()
+    index_b = nx.get_node_attributes(network_b, 'betweenness').items()
+
     sorted_a = sorted(index_a, key=lambda x:x[1], reverse=True)
     sorted_b = sorted(index_b, key=lambda x:x[1], reverse=True)
+
     scores = [a[1]*b[1] for a, b in zip(sorted_a, sorted_b) if a[0] == b[0]]
     return sum(scores)
 
-def standardized_sr(index_a, index_b):
+def standardized_sr(network_a, network_b):
+    index_a = nx.get_node_attributes(network_a, 'betweenness').items()
+    index_b = nx.get_node_attributes(network_b, 'betweenness').items()
+
     sum_a_squared = sum([centr**2 for word, centr in index_a])
     sum_b_squared = sum([centr**2 for word, centr in index_b])
-    norm = math.sqrt((sum_a_squared * sum_b_squared))
-    standardized = simple_resonance(index_a, index_b) / norm
-    return standardized
 
+    norm = math.sqrt((sum_a_squared * sum_b_squared))
+    standardized = simple_resonance(network_a, network_a) / norm
+
+    return standardized
 
 def pair_influence(graph, betweenness='betweenness',
                    frequency='frequency', name='pair_i'):

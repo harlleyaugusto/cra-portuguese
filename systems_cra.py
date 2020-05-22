@@ -7,47 +7,90 @@ from CRA import cra_centered_graph
 import networkx as nx
 import configparser
 from CRA_analysis import simple_resonance, standardized_sr
+import os
 
 def save_network(G, experiment_name, filter, folder = "data/experiments/"):
-    nx.write_gexf(G, folder + experiment_name + "_" + filter +'.gexf')
+    nx.write_gexf(G, folder + experiment_name + "/" + experiment_name + "_" + filter +'.gexf')
 
 def filter_post(data, filter):
     for f in filter:
         data = data[data[f].apply(lambda s: set(filter.get(f)).issubset(s))]
-    return data
+    return data.copy()
 
-def create_network(data, network_filters, experiment_name):
+def create_network(data, networks, experiment_name, folder):
     #filtering
-    for k in network_filters:
+    for k in networks:
         print("------------ Experiment:filter: " + str(k) + "---------------" )
-        network = filter_post(data, network_filters.get(k))
-        print(network[['Subsistema', 'TemaN1']])
+        network = filter_post(data, networks.get(k))
 
         # Creating edges and its frequency
         freq_edges = {}
         network['link'] = network['np'].apply(lambda x: link_list_freq(x, freq_edges))
+        #print(freq_edges)
 
         # Concatenate post's edges into a single list of edges
         print("Starting edgelist...")
         edgelist = network.link.sum()
         print("Done!")
-        print(edgelist)
 
         # Return a graph with node's betweenness and edges's frequency
         G = cra_centered_graph(edgelist, freq_edges)
-        save_network(G, experiment_name, str(k))
 
-        print("------------ Experiment " + experiment_name + ": DONE!---------------")
+        save_network(G, experiment_name, str(k), folder)
+        network = None
 
-#def similarity_betw_network(similarity_measures, network_filters, experiment_name, folder = "data/experiments/"):
 
+def resonance(similarity_measures, networks, experiment_name, folder = "data/experiments/"):
+    comp = list(networks.keys())
+    res = {}
+    for i in range(comp.__len__()):
+        net_1 = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(comp[i]) + ".gexf")
+        for j in range(i + 1, comp.__len__()):
+            net_2 = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(comp[j]) + ".gexf")
+            for sm in similarity_measures:
+                print("calculating...: " + sm + " " + comp[i] + " - " + comp[j])
+                r = eval(sm)(net_1, net_2)
+                print("Done: " + str(r))
+                if sm not in res:
+                    res[sm] = {}
+                    if comp[i] not in res[sm]:
+                        res[sm][comp[i]] = {}
+                        res[sm][comp[i]][comp[j]] = r
+                    else:
+                        res[sm][comp[i]][comp[j]] = r
+                else:
+                    if comp[i] not in res[sm]:
+                        res[sm][comp[i]] = {}
+                        res[sm][comp[i]][comp[j]] = r
+                    else:
+                        res[sm][comp[i]][comp[j]] = r
+    return res
+
+def create_folder_exp(folder, experiment_name):
+    if not os.path.exists(folder+experiment_name):
+        os.mkdir(folder+experiment_name)
+        print("Directory ", folder+experiment_name, " Created ")
+    else:
+        print("Directory ", folder+experiment_name, " already exists")
 
 def run_experiment(data, exp_config):
     experiment_name = exp_config['EXPERIMENT']['name']
-    network_filters = eval(exp_config['EXPERIMENT']['network_filters'])
-    similarity_measures = eval(exp_config['EXPERIMENT']['similarity_measures'])
+    networks = eval(exp_config['EXPERIMENT']['networks'])
+    folder = exp_config['EXPERIMENT']['folder']
+    generate_network = eval(exp_config['EXPERIMENT']['generate_network'])
 
-    create_network(data, network_filters, experiment_name)
+    create_folder_exp(folder, experiment_name)
+
+    if(generate_network):
+        create_network(data, networks, experiment_name, folder)
+    else: #path to the already genereted networks
+        print("...")
+
+    if(exp_config.has_section('RESONANCE')):
+        similarity_measures = eval(exp_config['RESONANCE']['resonance_measures'])
+        res = resonance(similarity_measures, networks, experiment_name, folder)
+
+    print(res)
     #run the comparison between two networks give a metric
 
 if __name__ == '__main__':
@@ -57,12 +100,16 @@ if __name__ == '__main__':
     data.TemaN2 = data['TemaN2'].apply(eval)
     data.np = data['np'].apply(eval)
 
-    #dropnull
-    #data = data[data.Post.isnull() != True]
-    #data = data[data.np.isnull() != True]
-
-    #experiment = {1: {'Subsistema': ['INDIVÍDUO', 'MICROSSISTEMA'], 'TemaN1': ['PRAZER']}, 2: {'Subsistema' :['MICROSSISTEMA']}}
     exp_config = configparser.ConfigParser()
     exp_config.read("experiments/experiment1.ini")
 
+    #networks = eval(exp_config['EXPERIMENT']['networks'])
+    #network = filter_post(data, networks.get("net2"))
+    #freq_edges = {}
+    #network['link'] = network['np'].apply(lambda x: link_list_freq(x, freq_edges))
+
+    #resonance(eval(exp_config['RESONANCE']['resonance_measures']), eval(exp_config['EXPERIMENT']['networks']), exp_config['EXPERIMENT']['name'])
+
     run_experiment(data, exp_config)
+
+
