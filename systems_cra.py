@@ -6,8 +6,10 @@ from data_process import link_list_freq
 from CRA import cra_centered_graph
 import networkx as nx
 import configparser
-from CRA_analysis import simple_resonance, standardized_sr
+from CRA_analysis import simple_resonance, standardized_sr, pair_resonance, standardized_pr
 import os
+import csv
+from report import word_level
 
 def save_network(G, experiment_name, filter, folder = "data/experiments/"):
     nx.write_gexf(G, folder + experiment_name + "/" + experiment_name + "_" + filter +'.gexf')
@@ -17,7 +19,7 @@ def filter_post(data, filter):
         data = data[data[f].apply(lambda s: set(filter.get(f)).issubset(s))]
     return data.copy()
 
-def create_network(data, networks, experiment_name, folder):
+def create_network(data, networks, experiment_name, folder, report):
     #filtering
     for k in networks:
         print("------------ Experiment:filter: " + str(k) + "---------------" )
@@ -37,8 +39,8 @@ def create_network(data, networks, experiment_name, folder):
         G = cra_centered_graph(edgelist, freq_edges)
 
         save_network(G, experiment_name, str(k), folder)
-        network = None
 
+        network = None
 
 def resonance(similarity_measures, networks, experiment_name, folder = "data/experiments/"):
     comp = list(networks.keys())
@@ -73,25 +75,31 @@ def create_folder_exp(folder, experiment_name):
     else:
         print("Directory ", folder+experiment_name, " already exists")
 
+    if not os.path.exists(folder + experiment_name + "csv/"):
+        os.mkdir(folder+experiment_name)
+        print("Directory ", folder + experiment_name + "csv/", " Created ")
+    else:
+        print("Directory ", folder + experiment_name + "csv/", " already exists")
+
 def run_experiment(data, exp_config):
     experiment_name = exp_config['EXPERIMENT']['name']
     networks = eval(exp_config['EXPERIMENT']['networks'])
     folder = exp_config['EXPERIMENT']['folder']
     generate_network = eval(exp_config['EXPERIMENT']['generate_network'])
-
     create_folder_exp(folder, experiment_name)
 
     if(generate_network):
-        create_network(data, networks, experiment_name, folder)
-    else: #path to the already genereted networks
-        print("...")
+        create_network(data, networks, experiment_name, folder, report)
+
+    if (exp_config.has_section('REPORTING')):
+        if (eval(exp_config['REPORTING']['word_level'])):
+            word_level(exp_config)
 
     if(exp_config.has_section('RESONANCE')):
         similarity_measures = eval(exp_config['RESONANCE']['resonance_measures'])
         res = resonance(similarity_measures, networks, experiment_name, folder)
+        report_resonace(res, exp_config)
 
-    print(res)
-    #run the comparison between two networks give a metric
 
 if __name__ == '__main__':
     data = pd.read_csv("data/all_posts_facebook_cleaned.csv", engine='python')

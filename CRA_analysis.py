@@ -24,42 +24,6 @@ from scipy import stats
 from statsmodels.distributions.empirical_distribution import ECDF
 
 
-def graph_plot(G):
-    #%pylab inline
-    #%config InlineBackend.figure_format = 'png'
-    H = G.copy()
-    plt.rc('figure', figsize=(12, 7))
-    nodes = [x for x, y in H.nodes(data=True) if y['betweenness'] == 0.0]
-    H.remove_nodes_from(nodes)
-    node_size = [y['betweenness'] * 10000 for x, y in H.nodes(data=True)]
-    pos = nx.spring_layout(H)
-    nx.draw_networkx(H, pos, node_size=node_size, edge_color='y', alpha=.004, linewidths=0.00001)
-    plt.savefig("graph.pdf")
-
-def save_graph(G, index):
-    #index = nx.betweenness_centrality(G)
-
-    G.remove_nodes_from([n for n in index if index[n] == .0])
-    node_size = [index[n] * 10000 for n in G]
-    pos = nx.spring_layout(G)
-
-    #initialze Figure
-    plt.figure(num=None, figsize=(20, 20), dpi=80)
-    plt.axis('off')
-    fig = plt.figure(1)
-    nx.draw_networkx_nodes(G,pos, node_size=2.6)
-    nx.draw_networkx_edges(G,pos, width = 0.3)
-
-   # cut = 1.00
-   # xmax = cut * max(xx for xx, yy in pos.values())
-   # ymax = cut * max(yy for xx, yy in pos.values())
-   # plt.xlim(0, xmax)
-   # plt.ylim(0, ymax)
-
-    plt.savefig("rede",bbox_inches="tight")
-    pylab.close()
-
-
 def central_words(index):
     #index = nx.betweenness_centrality(G)
     sorted_index = sorted(index.items(), key=lambda x: x[1], reverse=True)
@@ -93,20 +57,44 @@ def standardized_sr(network_a, network_b):
 def pair_influence(graph, betweenness='betweenness',
                    frequency='frequency', name='pair_i'):
     for u, v in graph.edges():
-        index_u = graph.node[u][betweenness]
-        index_v = graph.node[v][betweenness]
+        index_u = graph.nodes[u][betweenness]
+        index_v = graph.nodes[v][betweenness]
         score = index_u * index_v * graph[u][v][frequency]
         graph[u][v][name] = score
 
-def pair_resonance(index_a, index_b):
+def pair_resonance(network_a, network_b):
+    if(not nx.get_edge_attributes(network_a, 'pair_i')):
+        pair_influence(network_a)
+        index_a = nx.get_edge_attributes(network_a, 'pair_i')
+    else:
+        index_a = nx.get_edge_attributes(network_a, 'pair_i')
+
+    if (not nx.get_edge_attributes(network_b, 'pair_i')):
+        pair_influence(network_b)
+        index_b = nx.get_edge_attributes(network_b, 'pair_i')
+    else:
+        index_b = nx.get_edge_attributes(network_b, 'pair_i')
+
     edges = set(index_a.keys()) & set(index_b.keys())
     pr_score = sum([index_a[edge] * index_b[edge] for edge in edges])
     return pr_score
 
-def standardized_pr(index_a, index_b):
+def standardized_pr(network_a, network_b):
+    if(not nx.get_edge_attributes(network_a, 'pair_i')):
+        pair_influence(network_a)
+        index_a = nx.get_edge_attributes(network_a, 'pair_i')
+    else:
+        index_a = nx.get_edge_attributes(network_a, 'pair_i')
+
+    if (not nx.get_edge_attributes(network_b, 'pair_i')):
+        pair_influence(network_b)
+        index_b = nx.get_edge_attributes(network_b, 'pair_i')
+    else:
+        index_b = nx.get_edge_attributes(network_b, 'pair_i')
+
     a_sqrt = math.sqrt(sum([index_a[edge]**2 for edge in index_a]))
     b_sqrt = math.sqrt(sum([index_b[edge]**2 for edge in index_b]))
-    standardized = pair_resonance(index_a, index_b) / (a_sqrt * b_sqrt)
+    standardized = pair_resonance(network_a, network_b) / (a_sqrt * b_sqrt)
     return standardized
 
 
