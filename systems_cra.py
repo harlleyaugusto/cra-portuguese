@@ -9,7 +9,7 @@ import configparser
 from CRA_analysis import simple_resonance, standardized_sr, pair_resonance, standardized_pr
 import os
 import csv
-from report import word_level
+from report import word_level, report_resonace
 
 def save_network(G, experiment_name, filter, folder = "data/experiments/"):
     nx.write_gexf(G, folder + experiment_name + "/" + experiment_name + "_" + filter +'.gexf')
@@ -19,7 +19,7 @@ def filter_post(data, filter):
         data = data[data[f].apply(lambda s: set(filter.get(f)).issubset(s))]
     return data.copy()
 
-def create_network(data, networks, experiment_name, folder, report):
+def create_network(data, networks, experiment_name, folder):
     #filtering
     for k in networks:
         print("------------ Experiment:filter: " + str(k) + "---------------" )
@@ -75,11 +75,11 @@ def create_folder_exp(folder, experiment_name):
     else:
         print("Directory ", folder+experiment_name, " already exists")
 
-    if not os.path.exists(folder + experiment_name + "csv/"):
-        os.mkdir(folder+experiment_name)
-        print("Directory ", folder + experiment_name + "csv/", " Created ")
+    if not os.path.exists(folder + experiment_name + "/csv/"):
+        os.mkdir(folder+experiment_name + "/csv/")
+        print("Directory ", folder + experiment_name + "/csv/", " Created ")
     else:
-        print("Directory ", folder + experiment_name + "csv/", " already exists")
+        print("Directory ", folder + experiment_name + "/csv/", " already exists")
 
 def run_experiment(data, exp_config):
     experiment_name = exp_config['EXPERIMENT']['name']
@@ -89,7 +89,7 @@ def run_experiment(data, exp_config):
     create_folder_exp(folder, experiment_name)
 
     if(generate_network):
-        create_network(data, networks, experiment_name, folder, report)
+        create_network(data, networks, experiment_name, folder)
 
     if (exp_config.has_section('REPORTING')):
         if (eval(exp_config['REPORTING']['word_level'])):
@@ -110,13 +110,6 @@ if __name__ == '__main__':
 
     exp_config = configparser.ConfigParser()
     exp_config.read("experiments/experiment1.ini")
-
-    #networks = eval(exp_config['EXPERIMENT']['networks'])
-    #network = filter_post(data, networks.get("net2"))
-    #freq_edges = {}
-    #network['link'] = network['np'].apply(lambda x: link_list_freq(x, freq_edges))
-
-    #resonance(eval(exp_config['RESONANCE']['resonance_measures']), eval(exp_config['EXPERIMENT']['networks']), exp_config['EXPERIMENT']['name'])
 
     run_experiment(data, exp_config)
 
