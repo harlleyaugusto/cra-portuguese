@@ -24,7 +24,6 @@ def cra_centered_graph(edgelist, freq_edges):
     print("Set Frequency...")
     for edge in set_edgelistset:
         i = i + 1
-        #print("Frequency calculation: " + str(i) + "/" + str(set_size))
         freq = 0
         if edge in freq_edges:
             freq = freq + freq_edges[edge]

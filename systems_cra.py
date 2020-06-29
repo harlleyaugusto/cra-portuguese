@@ -6,13 +6,10 @@ from data_process import link_list_freq
 from CRA import cra_centered_graph
 import networkx as nx
 import configparser
-from CRA_analysis import simple_resonance, standardized_sr, pair_resonance, standardized_pr
+from resonances import simple_resonance, standardized_sr, pair_resonance, standardized_pr
 import os
 import csv
-from report import word_level, report_resonace
-
-def save_network(G, experiment_name, filter, folder = "data/experiments/"):
-    nx.write_gexf(G, folder + experiment_name + "/" + experiment_name + "_" + filter +'.gexf')
+from report import word_level, report_resonace, save_network, create_folder_exp
 
 def filter_post(data, filter):
     for f in filter:
@@ -28,7 +25,6 @@ def create_network(data, networks, experiment_name, folder):
         # Creating edges and its frequency
         freq_edges = {}
         network['link'] = network['np'].apply(lambda x: link_list_freq(x, freq_edges))
-        #print(freq_edges)
 
         # Concatenate post's edges into a single list of edges
         print("Starting edgelist...")
@@ -38,63 +34,64 @@ def create_network(data, networks, experiment_name, folder):
         # Return a graph with node's betweenness and edges's frequency
         G = cra_centered_graph(edgelist, freq_edges)
 
+        # Save the network as .gexf file
         save_network(G, experiment_name, str(k), folder)
 
         network = None
 
 def resonance(similarity_measures, networks, experiment_name, folder = "data/experiments/"):
-    comp = list(networks.keys())
+
+    networks_keys = list(networks.keys())
     res = {}
-    for i in range(comp.__len__()):
-        net_1 = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(comp[i]) + ".gexf")
-        for j in range(i + 1, comp.__len__()):
-            net_2 = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(comp[j]) + ".gexf")
+    for i in range(networks_keys.__len__()):
+        net_1 = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(networks_keys[i]) + ".gexf")
+        for j in range(i + 1, networks_keys.__len__()):
+            net_2 = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(networks_keys[j]) + ".gexf")
             for sm in similarity_measures:
-                print("calculating...: " + sm + " " + comp[i] + " - " + comp[j])
+                print("calculating...: " + sm + " " + networks_keys[i] + " - " + networks_keys[j])
                 r = eval(sm)(net_1, net_2)
                 print("Done: " + str(r))
                 if sm not in res:
                     res[sm] = {}
-                    if comp[i] not in res[sm]:
-                        res[sm][comp[i]] = {}
-                        res[sm][comp[i]][comp[j]] = r
+                    if networks_keys[i] not in res[sm]:
+                        res[sm][networks_keys[i]] = {}
+                        res[sm][networks_keys[i]][networks_keys[j]] = r
                     else:
-                        res[sm][comp[i]][comp[j]] = r
+                        res[sm][networks_keys[i]][networks_keys[j]] = r
                 else:
-                    if comp[i] not in res[sm]:
-                        res[sm][comp[i]] = {}
-                        res[sm][comp[i]][comp[j]] = r
+                    if networks_keys[i] not in res[sm]:
+                        res[sm][networks_keys[i]] = {}
+                        res[sm][networks_keys[i]][networks_keys[j]] = r
                     else:
-                        res[sm][comp[i]][comp[j]] = r
+                        res[sm][networks_keys[i]][networks_keys[j]] = r
     return res
 
-def create_folder_exp(folder, experiment_name):
-    if not os.path.exists(folder+experiment_name):
-        os.mkdir(folder+experiment_name)
-        print("Directory ", folder+experiment_name, " Created ")
-    else:
-        print("Directory ", folder+experiment_name, " already exists")
 
-    if not os.path.exists(folder + experiment_name + "/csv/"):
-        os.mkdir(folder+experiment_name + "/csv/")
-        print("Directory ", folder + experiment_name + "/csv/", " Created ")
-    else:
-        print("Directory ", folder + experiment_name + "/csv/", " already exists")
 
 def run_experiment(data, exp_config):
+    '''
+    Orchestrates all the experiments (network generation, metrics and report) set-up in exp_config.
+
+    :param data: data already processed
+    :param exp_config: experiment setup
+    '''
+
     experiment_name = exp_config['EXPERIMENT']['name']
     networks = eval(exp_config['EXPERIMENT']['networks'])
     folder = exp_config['EXPERIMENT']['folder']
     generate_network = eval(exp_config['EXPERIMENT']['generate_network'])
     create_folder_exp(folder, experiment_name)
 
+    #Creates all the networks, if it was not created
     if(generate_network):
         create_network(data, networks, experiment_name, folder)
 
+    #Exports network info in a week level
     if (exp_config.has_section('REPORTING')):
         if (eval(exp_config['REPORTING']['word_level'])):
             word_level(exp_config)
 
+    #Computes all metrics for each pair of network
     if(exp_config.has_section('RESONANCE')):
         similarity_measures = eval(exp_config['RESONANCE']['resonance_measures'])
         res = resonance(similarity_measures, networks, experiment_name, folder)
@@ -102,12 +99,16 @@ def run_experiment(data, exp_config):
 
 
 if __name__ == '__main__':
+    #Reading the data already processed to create the networks
     data = pd.read_csv("data/all_posts_facebook_cleaned.csv", engine='python')
+
+    #Transforming data as string into list
     data.Subsistema = data['Subsistema'].apply(eval)
     data.TemaN1 = data['TemaN1'].apply(eval)
     data.TemaN2 = data['TemaN2'].apply(eval)
     data.np = data['np'].apply(eval)
 
+    #Reading the experiment configurantion
     exp_config = configparser.ConfigParser()
     exp_config.read("experiments/experiment1.ini")
 

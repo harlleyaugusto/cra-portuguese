@@ -6,9 +6,31 @@ from data_process import link_list_freq
 from CRA import cra_centered_graph
 import networkx as nx
 import configparser
-from CRA_analysis import simple_resonance, standardized_sr, pair_resonance, standardized_pr
+from resonances import simple_resonance, standardized_sr, pair_resonance, standardized_pr
 import os
 import csv
+
+def create_folder_exp(folder, experiment_name):
+    '''
+    Cretes the folder to save the experiment output
+    :param folder:
+    :param experiment_name:
+    :return:
+    '''
+    if not os.path.exists(folder+experiment_name):
+        os.mkdir(folder+experiment_name)
+        print("Directory ", folder+experiment_name, " Created ")
+    else:
+        print("Directory ", folder+experiment_name, " already exists")
+
+    if not os.path.exists(folder + experiment_name + "/csv/"):
+        os.mkdir(folder+experiment_name + "/csv/")
+        print("Directory ", folder + experiment_name + "/csv/", " Created ")
+    else:
+        print("Directory ", folder + experiment_name + "/csv/", " already exists")
+
+def save_network(G, experiment_name, filter, folder = "data/experiments/"):
+    nx.write_gexf(G, folder + experiment_name + "/" + experiment_name + "_" + filter +'.gexf')
 
 def word_level(exp_config):
     experiment_name = exp_config['EXPERIMENT']['name']
