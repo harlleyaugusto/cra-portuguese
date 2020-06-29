@@ -18,8 +18,9 @@ def word_level(exp_config):
         G = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(network) + ".gexf")
         with open(folder + experiment_name + "/" + "csv/" + network + ".csv", mode='w') as network_file:
             network_writer = csv.writer(network_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            network_writer.writerow(["node", "betweenness", "degree"])
             for node in list(G.nodes(data = True)):
-                network_writer.writerow([node[0], node[1]['betweenness'], G.degre[node[0]]])
+                network_writer.writerow([node[0], node[1]['betweenness'], G.degree[node[0]]])
 
 def report_resonace(res, exp_config):
     experiment_name = exp_config['EXPERIMENT']['name']
