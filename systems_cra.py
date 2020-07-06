@@ -102,7 +102,7 @@ if __name__ == '__main__':
     #Reading the data already processed to create the networks
     data = pd.read_csv("data/all_posts_facebook_cleaned.csv", engine='python')
 
-    #Transforming data as string into list
+    #Transforming data as string into list (or something else)
     data.Subsistema = data['Subsistema'].apply(eval)
     data.TemaN1 = data['TemaN1'].apply(eval)
     data.TemaN2 = data['TemaN2'].apply(eval)
