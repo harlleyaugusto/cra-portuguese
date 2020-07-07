@@ -23,11 +23,11 @@ def create_folder_exp(folder, experiment_name):
     else:
         print("Directory ", folder+experiment_name, " already exists")
 
-    if not os.path.exists(folder + experiment_name + "/csv/"):
-        os.mkdir(folder+experiment_name + "/csv/")
-        print("Directory ", folder + experiment_name + "/csv/", " Created ")
+    if not os.path.exists(folder + experiment_name + "/report/"):
+        os.mkdir(folder+experiment_name + "/report/")
+        print("Directory ", folder + experiment_name + "/report/", " Created ")
     else:
-        print("Directory ", folder + experiment_name + "/csv/", " already exists")
+        print("Directory ", folder + experiment_name + "/report/", " already exists")
 
 def save_network(G, experiment_name, filter, folder = "data/experiments/"):
     nx.write_gexf(G, folder + experiment_name + "/" + experiment_name + "_" + filter +'.gexf')
@@ -38,7 +38,7 @@ def word_level(exp_config):
     folder = exp_config['EXPERIMENT']['folder']
     for network in networks.keys():
         G = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(network) + ".gexf")
-        with open(folder + experiment_name + "/" + "csv/" + network + ".csv", mode='w') as network_file:
+        with open(folder + experiment_name + "/" + "report/" + network + ".csv", mode='w') as network_file:
             network_writer = csv.writer(network_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             network_writer.writerow(["node", "betweenness", "degree"])
             for node in list(G.nodes(data = True)):
@@ -50,10 +50,10 @@ def report_resonace(res, exp_config):
     folder = exp_config['EXPERIMENT']['folder']
 
     for metric in res.keys():
-        f = open(folder + experiment_name + "/" + metric + ".txt", "w")
+        f = open(folder + experiment_name + "/report/" + metric + ".txt", "w")
         for net1 in res[metric]:
             for net2 in res[metric][net1]:
-                f.write(net1 + " " + net2 + ": " +str(res[metric][net1][net2]) + "\n")
+                f.write(net1 + "-" + net2 + ": " +str(res[metric][net1][net2]) + "\n")
 
 if __name__ == '__main__':
     exp_config = configparser.ConfigParser()
