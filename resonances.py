@@ -13,6 +13,7 @@ import itertools as it
 import re
 import matplotlib.pyplot as plt
 from matplotlib import pylab
+import configparser
 
 from stop_words import get_stop_words
 import networkx as nx
@@ -99,20 +100,20 @@ def standardized_pr(network_a, network_b):
 
 
 if __name__ == '__main__':
-    level = [4, 5]
-    G = nx.read_gexf("data/facebook_network_level_" + str(level).replace(" ", "") + ".gexf")
-    betweenneess = [y['betweenness'] for x, y in G.nodes(data=True)]
-    freq = [z['frequency'] for x, y, z in G.edges.data()]
-
-    #nodes with betweenness == 0.0
-    H = G.copy()
-    #nodes = [x for x, y in H.nodes(data=True) if y['betweenness'] == 0.0]
-    #H.remove_nodes_from(nodes)
-    remov_edge = [(x, y) for x, y, z in G.edges.data() if z['frequency'] < 50]
-    H.remove_edges_from(remov_edge)
-    H.remove_nodes_from(list(nx.isolates(H)))
-    nx.write_gexf(H, 'data/freq_greater_than_5_facebook_network_level_[4,5].gexf')
-    nx.write_gexf(G, 'data/facebook_network_level_[4,5].gexf')
+    # level = [4, 5]
+    # G = nx.read_gexf("data/facebook_network_level_" + str(level).replace(" ", "") + ".gexf")
+    # betweenneess = [y['betweenness'] for x, y in G.nodes(data=True)]
+    # freq = [z['frequency'] for x, y, z in G.edges.data()]
+    #
+    # #nodes with betweenness == 0.0
+    # H = G.copy()
+    # #nodes = [x for x, y in H.nodes(data=True) if y['betweenness'] == 0.0]
+    # #H.remove_nodes_from(nodes)
+    # remov_edge = [(x, y) for x, y, z in G.edges.data() if z['frequency'] < 50]
+    # H.remove_edges_from(remov_edge)
+    # H.remove_nodes_from(list(nx.isolates(H)))
+    # nx.write_gexf(H, 'data/freq_greater_than_5_facebook_network_level_[4,5].gexf')
+    # nx.write_gexf(G, 'data/facebook_network_level_[4,5].gexf')
 
     # finance_index = nx.get_node_attributes(G, 'betweenness').items()
     # food_index = nx.get_node_attributes(G, 'betweenness').items()
@@ -127,3 +128,15 @@ if __name__ == '__main__':
     #
     # print(standardized_pr(finance_iscore, food_iscore))
 
+    exp_config = configparser.ConfigParser()
+    exp_config.read("experiments/experimento_post_exclusivo.ini")
+    experiment_name = exp_config['EXPERIMENT']['name']
+    networks = eval(exp_config['EXPERIMENT']['networks'])
+    folder = exp_config['EXPERIMENT']['folder']
+    networks_keys = list(networks.keys())
+    for i in range(networks_keys.__len__()):
+        net_1 = nx.read_gexf(folder + experiment_name + "/" + experiment_name + "_" + str(networks_keys[i]) + ".gexf")
+        for j in range(i + 1, networks_keys.__len__()):
+            net_2 = nx.read_gexf(
+                folder + experiment_name + "/" + experiment_name + "_" + str(networks_keys[j]) + ".gexf")
+            print(simple_resonance(net_1, net_2))

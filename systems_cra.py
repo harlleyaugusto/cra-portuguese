@@ -13,7 +13,8 @@ from report import word_level, report_resonace, save_network, create_folder_exp
 
 def filter_post(data, filter):
     for f in filter:
-        data = data[data[f].apply(lambda s: set(filter.get(f)).issubset(s))]
+        #data = data[data[f].apply(lambda s: set(filter.get(f)).issubset(s))]
+        data = data[data[f].apply(lambda s: set(s).issubset(filter.get(f)))]
     return data.copy()
 
 def create_network(data, networks, experiment_name, folder):
@@ -21,7 +22,8 @@ def create_network(data, networks, experiment_name, folder):
     for k in networks:
         print("------------ Experiment:filter: " + str(k) + "---------------" )
         network = filter_post(data, networks.get(k))
-
+        print("===============Subsitema==================")
+        print(network['num_subsistemas'])
         # Creating edges and its frequency
         freq_edges = {}
         network['link'] = network['np'].apply(lambda x: link_list_freq(x, freq_edges))
@@ -99,18 +101,24 @@ def run_experiment(data, exp_config):
 
 
 if __name__ == '__main__':
+    # Reading the experiment configurantion
+    exp_config = configparser.ConfigParser()
+    exp_config.read("experiments/post_4_5_subsistema.ini")
+    data_path = exp_config['EXPERIMENT']['data_path']
+
     #Reading the data already processed to create the networks
-    data = pd.read_csv("data/all_posts_facebook_cleaned.csv", engine='python')
+    data = pd.read_csv(data_path, engine='python')
+
+    #data = pd.read_csv("data/all_posts_facebook_cleaned.csv", engine='python')
 
     #Transforming data as string into list (or something else)
     data.Subsistema = data['Subsistema'].apply(eval)
-    data.TemaN1 = data['TemaN1'].apply(eval)
-    data.TemaN2 = data['TemaN2'].apply(eval)
-    data.np = data['np'].apply(eval)
 
-    #Reading the experiment configurantion
-    exp_config = configparser.ConfigParser()
-    exp_config.read("experiments/experiment1.ini")
+    #post with more than 4 subsystems
+    data.num_subsistemas = data['num_subsistemas'].apply(eval)
+    #data.TemaN1 = data['TemaN1'].apply(eval)
+    #data.TemaN2 = data['TemaN2'].apply(eval)
+    data.np = data['np'].apply(eval)
 
     run_experiment(data, exp_config)
 

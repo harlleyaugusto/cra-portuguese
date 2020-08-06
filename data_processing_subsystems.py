@@ -16,14 +16,21 @@ def data_clean(data):
 
 if __name__ == '__main__':
     #Raw data loading
-    data = pd.read_csv("data/post_para_CRA_subsistemas.csv", engine='python', encoding='iso-8859-1', sep=';')
-    data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
+    data = pd.read_csv("data/planilha_completa_4_e_5_subsistemas.csv", engine='python', encoding='iso-8859-1', sep=';')
+    #For all_posts_facebook the below line is needed
+    #data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
 
-    data = data.groupby(['PostID', 'Post']).agg({'Subsistema': list,
-                         'TemaN1': list,
-                         'TemaN2': list,
-                         }).reset_index()
+    # data = data.groupby(['PostID', 'Post']).agg({'Subsistema': list,
+    #                      'TemaN1': list,
+    #                      'TemaN2': list,
+    #                      }).reset_index()
 
+    # #Exclusive posts
+    # data = data.groupby(['PostID', 'Post']).agg({'Subsistema': list,}).reset_index()
+    #
+    # #Post with more than 4 subsystems
+    data = data.groupby(['PostID', 'Post']).agg({'Subsistema': list, 'num_subsistemas' : list,}).reset_index()
+    #
     #PostId missing from Ana's file: {514, 515, 642, 645, 391, 288, 419, 429, 181, 445, 583, 206, 465, 211, 474, 859,
     # 477, 861, 481, 483, 740, 485, 102, 741, 871, 367, 502, 764}
     data = data_clean(data)
@@ -41,7 +48,7 @@ if __name__ == '__main__':
     data = data[data.np.isnull() != True]
 
     # Save data with Subsitema, TemaN1 and TemaN2 aggreagated, and with noun-phrases for each post
-    data.to_csv("data/all_posts_facebook_cleaned.csv", index=False)
+    data.to_csv("data/planilha_completa_4_e_5_subsistemas_cleaned.csv", index=False)
 
 
 
