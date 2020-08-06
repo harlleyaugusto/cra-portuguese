@@ -23,7 +23,8 @@ def create_network(data, networks, experiment_name, folder):
         print("------------ Experiment:filter: " + str(k) + "---------------" )
         network = filter_post(data, networks.get(k))
         print("===============Subsitema==================")
-        print(network['num_subsistemas'])
+        pd.set_option('display.max_rows', network.shape[0] + 1)
+        print(network[['np', 'num_subsistemas']])
         # Creating edges and its frequency
         freq_edges = {}
         network['link'] = network['np'].apply(lambda x: link_list_freq(x, freq_edges))
@@ -112,10 +113,14 @@ if __name__ == '__main__':
     #data = pd.read_csv("data/all_posts_facebook_cleaned.csv", engine='python')
 
     #Transforming data as string into list (or something else)
-    data.Subsistema = data['Subsistema'].apply(eval)
+    #data.Subsistema = data['Subsistema'].apply(eval)
 
     #post with more than 4 subsystems
+
+    #Uncomment if you want to filter post classified in more than 4 subsystems
     data.num_subsistemas = data['num_subsistemas'].apply(eval)
+
+
     #data.TemaN1 = data['TemaN1'].apply(eval)
     #data.TemaN2 = data['TemaN2'].apply(eval)
     data.np = data['np'].apply(eval)
