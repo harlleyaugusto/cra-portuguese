@@ -19,15 +19,17 @@ def create_folder_exp(folder, experiment_name):
     '''
     if not os.path.exists(folder+experiment_name):
         os.mkdir(folder+experiment_name)
-        print("Directory ", folder+experiment_name, " Created ")
+        #print("Directory ", folder+experiment_name, " Created ")
     else:
-        print("Directory ", folder+experiment_name, " already exists")
+        pass
+        #print("Directory ", folder+experiment_name, " already exists")
 
     if not os.path.exists(folder + experiment_name + "/report/"):
         os.mkdir(folder+experiment_name + "/report/")
-        print("Directory ", folder + experiment_name + "/report/", " Created ")
+        #print("Directory ", folder + experiment_name + "/report/", " Created ")
     else:
-        print("Directory ", folder + experiment_name + "/report/", " already exists")
+        pass
+        #print("Directory ", folder + experiment_name + "/report/", " already exists")
 
 def save_network(G, experiment_name, filter, folder = "data/experiments/"):
     nx.write_gexf(G, folder + experiment_name + "/" + experiment_name + "_" + filter +'.gexf')

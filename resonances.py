@@ -129,7 +129,7 @@ if __name__ == '__main__':
     # print(standardized_pr(finance_iscore, food_iscore))
 
     exp_config = configparser.ConfigParser()
-    exp_config.read("experiments/experimento_post_exclusivo.ini")
+    exp_config.read("experiments/visualizacao_post_exclusivo.ini")
     experiment_name = exp_config['EXPERIMENT']['name']
     networks = eval(exp_config['EXPERIMENT']['networks'])
     folder = exp_config['EXPERIMENT']['folder']

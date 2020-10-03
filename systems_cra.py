@@ -104,7 +104,7 @@ def run_experiment(data, exp_config):
 if __name__ == '__main__':
     # Reading the experiment configurantion
     exp_config = configparser.ConfigParser()
-    exp_config.read("experiments/post_4_5_subsistema.ini")
+    exp_config.read("experiments/visualizacao_post_4_5_subsistema.ini")
     data_path = exp_config['EXPERIMENT']['data_path']
 
     #Reading the data already processed to create the networks
